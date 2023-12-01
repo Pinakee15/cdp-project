@@ -1,9 +1,10 @@
 import "./App.css";
-import FilePicker from "./Components/DirectoryPicker";
 
 import React from "react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import generateAssetMetaData from "./utils/generateAssetMetaData.utils";
+import CONFIG from "./config/config";
 
 function App() {
   // Function to create an XML element with a namespace
@@ -145,7 +146,7 @@ function App() {
     return `<?xml version="1.0" encoding="UTF-8"?>${xmlString}`;
   };
 
-  const downloadFile = () => {
+  const generateDCPDirectory = (assetsData) => {
     const zip = new JSZip();
 
     const xmlContent1 = generateXMLContent("File 1", "Content 1");
@@ -154,17 +155,32 @@ function App() {
     const folder = zip.folder("xml_files");
     folder.file("file1.xml", xmlContent1);
     folder.file("file2.xml", xmlContent2);
+    downloadDirectory(zip);
+  };
 
+  const downloadDirectory = (zip) => {
     zip.generateAsync({ type: "blob" }).then((blob) => {
       saveAs(blob, "xml_files.zip");
     });
   };
 
+  const handleGenerateDCP = async () => {
+    const { mainPicture, mainSound, mainSubtitle } =
+      await generateAssetMetaData(
+        CONFIG.NO_OF_CHUNK_FILES,
+        CONFIG.ALLOWED_FILE_TYPES
+      );
+    const assetsData = [...mainPicture, ...mainSound, ...mainSubtitle];
+    generateDCPDirectory(assetsData);
+    console.log({ mainPicture, mainSound, mainSubtitle }, "finally");
+  };
+
   return (
     <div className="App">
       <div>Upload document</div>
-      <FilePicker />
-      <button onClick={downloadFile}>Download file</button>
+      {/* <FilePicker /> */}
+      <button onClick={generateDCPDirectory}>Download file</button>
+      <button onClick={handleGenerateDCP}>Select Folder</button>
     </div>
   );
 }

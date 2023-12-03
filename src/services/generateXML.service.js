@@ -1,4 +1,5 @@
-import { createAssetMapBlueprintArray } from "../utils/xmlElementsBlueprintArray.utils";
+import CONFIG from "../config/config";
+import { createXMLElementsBlueprintArray } from "../utils/xmlElementsBlueprintArray.utils";
 import { v4 as uuidv4 } from "uuid";
 
 // Function to convert XML document to string
@@ -13,14 +14,10 @@ function createElementWithNS(doc, namespace, elementName) {
 }
 
 // Function to create the XML document
-const createXMLElements = (xmlDoc, parentElement, node) => {
+const createXMLElements = (xmlDoc, parentElement, node, namespace) => {
   const nodeKey = Object.keys(node)[0];
   const nodeVal = node[nodeKey];
-  const newEle = createElementWithNS(
-    xmlDoc,
-    "http://www.smpte-ra.org/schemas/429-9/2007/AM",
-    nodeKey
-  );
+  const newEle = createElementWithNS(xmlDoc, namespace, nodeKey);
   if (Array.isArray(nodeVal)) {
     for (let node of nodeVal) {
       createXMLElements(xmlDoc, newEle, node);
@@ -32,36 +29,35 @@ const createXMLElements = (xmlDoc, parentElement, node) => {
 };
 
 const generateXMLContent = (assetData, type) => {
-  let namespace, tagName;
-  if (type === "ASSETMAP") {
-    namespace = "http://www.smpte-ra.org/schemas/429-9/2007/AM";
-    tagName = "AssetMap";
-  }
   // Generate the root element and document
   const xmlDoc = document.implementation.createDocument(
-    namespace,
-    tagName,
+    CONFIG.XML_META_INFO[type].NAMESPACE,
+    CONFIG.XML_META_INFO[type].TAGNAME,
     null
   );
   const assetMap = xmlDoc.documentElement;
-  assetMap.setAttribute("xmlns", namespace);
+  assetMap.setAttribute("xmlns", CONFIG.XML_META_INFO[type].NAMESPACE);
   const id = `urn:uuid:${uuidv4()}`;
   const annotationText =
     "HighAssetCount_TST-2D_S_EN-XX_51_2K_ST_20210629_QCE_SMPTE_OV";
-  const xmlEleNodesArray = createAssetMapBlueprintArray({
+  const xmlEleNodesArray = createXMLElementsBlueprintArray({
     id,
     annotationText,
     assetList: assetData,
+    type,
   });
 
   for (let node of xmlEleNodesArray) {
-    createXMLElements(xmlDoc, assetMap, node);
+    createXMLElements(
+      xmlDoc,
+      assetMap,
+      node,
+      CONFIG.XML_META_INFO[type].NAMESPACE
+    );
   }
 
   // Convert XML document to string
   const xmlString = convertXMLToString(xmlDoc);
-
-  // Display the generated XML string (you can use it further as needed)
   return `<?xml version="1.0" encoding="UTF-8"?>${xmlString}`;
 };
 

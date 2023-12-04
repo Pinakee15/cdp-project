@@ -13,7 +13,7 @@ function createElementWithNS(doc, namespace, elementName) {
   return doc.createElementNS(namespace, elementName);
 }
 
-// Function to create the XML document
+// Function to create the XML document using recursion
 const createXMLElements = (xmlDoc, parentElement, node, namespace) => {
   const nodeKey = Object.keys(node)[0];
   const nodeVal = node[nodeKey];

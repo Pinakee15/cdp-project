@@ -8,14 +8,14 @@ const Error = ({ message, showMessageHandler }) => {
     const timer = setTimeout(() => {
       showMessageHandler(false);
       // setVisible(false);
-    }, 3000);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [message]);
 
   return visible ? (
     <div className="message-container">
-      <p className="message">{message}</p>
+      <p className={`${message.variant} message`}>{message.value}</p>
     </div>
   ) : null;
 };

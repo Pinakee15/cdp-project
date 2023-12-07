@@ -28,7 +28,7 @@ const createXMLElements = (xmlDoc, parentElement, node, namespace) => {
   parentElement.appendChild(newEle);
 };
 
-const generateXMLContent = (assetData, type) => {
+const generateXMLContent = (assetData, type, dirName) => {
   // Generate the root element and document
   const xmlDoc = document.implementation.createDocument(
     CONFIG.XML_META_INFO[type].NAMESPACE,
@@ -38,13 +38,13 @@ const generateXMLContent = (assetData, type) => {
   const assetMap = xmlDoc.documentElement;
   assetMap.setAttribute("xmlns", CONFIG.XML_META_INFO[type].NAMESPACE);
   const id = `urn:uuid:${uuidv4()}`;
-  const annotationText =
-    "HighAssetCount_TST-2D_S_EN-XX_51_2K_ST_20210629_QCE_SMPTE_OV";
+  const annotationText = dirName;
   const xmlEleNodesArray = createXMLElementsBlueprintArray({
     id,
     annotationText,
     assetList: assetData,
     type,
+    dirName,
   });
 
   for (let node of xmlEleNodesArray) {

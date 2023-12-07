@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import generateAssetMetaData from "./utils/generateAssetMetaData.utils";
 import CONFIG from "./config/config";
 import generateXMLContent from "./services/generateXML.service";
-import { createZipFolder, downloadDirectory } from "./services/files.service";
+import showFolderPicker from "./services/files.service";
 import Button from "./components/Button/Button";
 import { generateCDPFolderName } from "./utils/general.utils";
 import SnackBar from "./components/SnackBar/SnackBar";
@@ -20,34 +20,53 @@ function App() {
     setShowMessage(showMessage);
   };
 
-  const generateDCPDirectory = (assetsData, directoryName) => {
-    try {
-      const zip = createZipFolder();
-      const assetmapXMLContent = generateXMLContent(assetsData, "ASSETMAP");
-      const pklXMLContent = generateXMLContent(assetsData, "PKL");
-      const DCPDirectoryName = generateCDPFolderName(directoryName);
-      const folder = zip.folder(DCPDirectoryName);
-      folder.file("ASSETMAP.xml", assetmapXMLContent);
-      folder.file(`${DCPDirectoryName}.pkl.xml`, pklXMLContent);
-      downloadDirectory(zip, DCPDirectoryName);
-    } catch (err) {
-      setMessage(
-        `Some error occurred while generating or downloading xml content : ${err.message}`
-      );
-      setShowMessage(true);
-    }
+  const generateDCPDirectory = async (assetsData, directoryHandle) => {
+    const DCPDirectoryName = generateCDPFolderName(directoryHandle.name);
+    const assetmapXMLContent = generateXMLContent(
+      assetsData,
+      "ASSETMAP",
+      directoryHandle.name
+    );
+    const pklXMLContent = generateXMLContent(
+      assetsData,
+      "PKL",
+      DCPDirectoryName
+    );
+    const fileData = [
+      {
+        name: "ASSETMAP.xml",
+        content: assetmapXMLContent,
+      },
+      {
+        name: `${DCPDirectoryName}.pkl.xml`,
+        content: pklXMLContent,
+      },
+    ];
+    fileData.forEach(async (file) => {
+      const fileHandle = await directoryHandle.getFileHandle(file.name, {
+        create: true,
+      });
+      const writable = await fileHandle.createWritable();
+      await writable.write(file.content);
+      await writable.close();
+    });
+    console.log("File written successfully.");
+    setMessage({
+      value: `DCP created and created in the same folder successfully`,
+      variant: "success",
+    });
+    setShowMessage(true);
+    return;
   };
 
   const handleGenerateDCP = async () => {
     try {
-      const { mainPicture, mainSound, mainSubtitle, directoryName } =
-        await generateAssetMetaData(
-          CONFIG.NO_OF_CHUNK_FILES,
-          CONFIG.ALLOWED_FILE_TYPES
-        );
-      return;
+      const directoryHandle = await showFolderPicker();
+      const { mainPicture, mainSound, mainSubtitle } =
+        await generateAssetMetaData(CONFIG.ALLOWED_FILE_TYPES, directoryHandle);
       let assetsData = [];
-      for (let i = 0; i < CONFIG.NO_OF_CHUNK_FILES; i++) {
+      let individualAssetLength = mainPicture.length;
+      for (let i = 0; i < individualAssetLength; i++) {
         if (mainPicture.length) {
           assetsData.push(mainPicture[i]);
         }
@@ -58,9 +77,15 @@ function App() {
           assetsData.push(mainSubtitle[i]);
         }
       }
-      generateDCPDirectory(assetsData, directoryName);
+
+      console.log({ assetsData });
+
+      generateDCPDirectory(assetsData, directoryHandle);
     } catch (err) {
-      setMessage(err.message);
+      setMessage({
+        value: `Some error occurred while generating or downloading xml content : ${err.message}`,
+        variant: "error",
+      });
       setShowMessage(true);
     }
   };

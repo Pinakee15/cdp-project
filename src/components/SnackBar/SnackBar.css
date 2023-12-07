@@ -1,10 +1,16 @@
 .message-container{
     margin: 0.25rem;
 }
-.message{
-    background: red;
+.message{    
     padding: 0.25rem 1rem;
     text-align: center;
     color: #fff;
     font-size: 0.875rem;
   }
+
+.error{
+background: red;
+}
+.success{
+background: green;
+}

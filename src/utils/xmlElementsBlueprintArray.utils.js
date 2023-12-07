@@ -1,5 +1,6 @@
 import CONFIG from "../config/config";
 import { dateToISO8601Format } from "./time.utils";
+import { v4 as uuidv4 } from "uuid";
 
 const createXMLElementsBlueprintArray = ({
   id,
@@ -7,6 +8,7 @@ const createXMLElementsBlueprintArray = ({
   volumeCount = 1,
   assetList,
   type,
+  dirName,
 }) => {
   let AssetList = [];
   if (type === "ASSETMAP") {
@@ -19,6 +21,14 @@ const createXMLElementsBlueprintArray = ({
         ],
       };
     });
+    AssetList.unshift({
+      Asset: [
+        { Id: `urn:uuid:${uuidv4()}` },
+        { AnnotationText: dirName },
+        { ChunkList: [{ Chunk: [{ Path: `${dirName}.cpl.xml` }] }] },
+      ],
+    });
+    console.log("FINAL LIST : ", AssetList);
   } else if (type === "PKL") {
     AssetList = assetList.map((asset) => {
       return {

@@ -8,7 +8,6 @@ export default () => {
     const file = e.data;
     const reader = new FileReaderSync();
     const buffer = reader.readAsArrayBuffer(file);
-    console.log("THE BUFFER WE GOT : ", buffer);
 
     crypto.subtle
       .digest("SHA-256", buffer)

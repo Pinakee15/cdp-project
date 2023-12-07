@@ -4,13 +4,34 @@ import WebWorker from "../WebWorker";
 import hashFileWorker from "../workers/hash-file.worker";
 
 const createWorker = (file) => {
-  const webWorker = new WebWorker(hashFileWorker);
-  // const reader = new FileReaderSync();
-  // const buffer = reader.readAsArrayBuffer(file);
+  console.log("RUN SUCCESS");
+  const reader = new FileReaderSync();
+  const buffer = reader.readAsArrayBuffer(file);
   // worker.postMessage(buffer);
-  webWorker.postMessage(file);
+  const webWorker = new WebWorker(hashFileWorker);
+  webWorker.postMessage(buffer);
   return webWorker;
 };
+
+// const createWorker = (file) => {
+//   const webWorker = new WebWorker(hashFileWorker);
+//   console.log("RUN SUCCESS");
+
+//   const reader = new FileReader();
+//   reader.onload = (event) => {
+//     const buffer = event.target.result;
+//     webWorker.postMessage(buffer);
+//   };
+
+//   reader.onerror = (error) => {
+//     // Handle error if file reading fails
+//     console.error("File reading error:", error);
+//   };
+
+//   reader.readAsArrayBuffer(file);
+
+//   return webWorker;
+// };
 
 // Function to handle hashing in parallel
 const hashFiles = (files) => {

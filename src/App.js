@@ -1,5 +1,4 @@
 import "./App.css";
-
 import React, { useState } from "react";
 import generateAssetMetaData from "./utils/generateAssetMetaData.utils";
 import CONFIG from "./config/config";
@@ -46,6 +45,7 @@ function App() {
           CONFIG.NO_OF_CHUNK_FILES,
           CONFIG.ALLOWED_FILE_TYPES
         );
+      return;
       let assetsData = [];
       for (let i = 0; i < CONFIG.NO_OF_CHUNK_FILES; i++) {
         if (mainPicture.length) {

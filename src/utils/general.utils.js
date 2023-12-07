@@ -7,4 +7,11 @@ const generateCDPFolderName = (name) => {
   return dirName;
 };
 
-export { generateCDPFolderName };
+const calculateHash256 = async (buffer) => {
+  const hash = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+export { generateCDPFolderName, calculateHash256 };

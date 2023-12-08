@@ -7,7 +7,6 @@ const Error = ({ message, showMessageHandler }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       showMessageHandler(false);
-      // setVisible(false);
     }, 2500);
 
     return () => clearTimeout(timer);

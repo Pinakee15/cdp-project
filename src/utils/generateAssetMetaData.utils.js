@@ -17,8 +17,12 @@ const createFilesHash = async (files) => {
     return new Promise((resolve) => {
       const worker = createWorker(file);
       worker.onmessage = function (e) {
-        globalHashes.push(e.data);
-        resolve();
+        if (e.data.success) {
+          globalHashes.push(e.data?.message);
+          resolve();
+        } else {
+          throw new Error(e.data?.message);
+        }
       };
     });
   };

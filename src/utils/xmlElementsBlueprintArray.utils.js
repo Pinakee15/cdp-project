@@ -28,7 +28,6 @@ const createXMLElementsBlueprintArray = ({
         { ChunkList: [{ Chunk: [{ Path: `${dirName}.cpl.xml` }] }] },
       ],
     });
-    console.log("FINAL LIST : ", AssetList);
   } else if (type === "PKL") {
     AssetList = assetList.map((asset) => {
       return {

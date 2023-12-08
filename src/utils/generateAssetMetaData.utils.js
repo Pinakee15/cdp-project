@@ -9,21 +9,22 @@ const createWorker = (file) => {
 };
 
 // Function to handle hashing in parallel
-const createFilesHash = (files) => {
+const createFilesHash = async (files) => {
   const maxWorkers = navigator.hardwareConcurrency || 4;
-  const promises = [];
-  const hashes = [];
-
+  let globalHashes = [];
+  let hashes;
   let workersCount = 0;
   let currentIndex = 0;
 
   // Create workers to process files in parallel
   const createWorkers = () => {
+    const promises = [];
+    hashes = [];
     while (workersCount < maxWorkers && currentIndex < files.length) {
-      const file = files[currentIndex];
-      const worker = createWorker(file);
       workersCount++;
       currentIndex++;
+      const file = files[currentIndex];
+      const worker = createWorker(file);
       promises.push(
         new Promise((resolve) => {
           worker.onmessage = function (e) {
@@ -34,18 +35,32 @@ const createFilesHash = (files) => {
         })
       );
     }
+    console.log(
+      "entered createWorkers currentIndex , workersCount , promises ",
+      currentIndex,
+      workersCount,
+      promises
+    );
+    return promises;
   };
 
   // Start processing files
-  createWorkers();
 
-  // Handle worker completion and continue processing until all files are hashed
-  return Promise.all(promises).then(() => {
-    if (currentIndex < files.length) {
-      return createWorkers();
+  const getAllHashes = async () => {
+    console.log("entered getAllHashes function");
+    if (currentIndex <= files.length) {
+      const promises = createWorkers();
+      console.log("ENTERED IF CONDITION WITH PROMISES ", promises);
+      await Promise.all(promises);
+      globalHashes = [...globalHashes, ...hashes];
+      console.log("HASH ARRAY: ", globalHashes);
+      getAllHashes();
     }
-    return hashes;
-  });
+    return globalHashes;
+  };
+  const res = await getAllHashes();
+  console.log("returning before getting response : ", res);
+  return res;
 };
 
 const generateAssetMetaData = async (allowedFileTypes, directoryHandle) => {
@@ -65,6 +80,8 @@ const generateAssetMetaData = async (allowedFileTypes, directoryHandle) => {
     }
 
     const filesHashes = await createFilesHash(files);
+
+    console.log({ filesHashes }, "<---- ");
 
     let videoIdx = 0;
     let audioIdx = 0;

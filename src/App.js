@@ -25,7 +25,7 @@ function App() {
     const assetmapXMLContent = generateXMLContent(
       assetsData,
       "ASSETMAP",
-      directoryHandle.name
+      DCPDirectoryName
     );
     const pklXMLContent = generateXMLContent(
       assetsData,
@@ -77,7 +77,7 @@ function App() {
         }
       }
 
-      // generateDCPDirectory(assetsData, directoryHandle);
+      generateDCPDirectory(assetsData, directoryHandle);
     } catch (err) {
       setMessage({
         value: `Some error occurred while generating or downloading xml content : ${err.message}`,

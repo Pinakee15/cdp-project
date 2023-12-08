@@ -2,65 +2,44 @@ import { v4 as uuidv4 } from "uuid";
 import WebWorker from "../WebWorker";
 import hashFileWorker from "../workers/hash-file.worker";
 
-const createWorker = (file) => {
-  const webWorker = new WebWorker(hashFileWorker);
-  webWorker.postMessage(file);
-  return webWorker;
-};
-
-// Function to handle hashing in parallel
 const createFilesHash = async (files) => {
   const maxWorkers = navigator.hardwareConcurrency || 4;
   let globalHashes = [];
-  let hashes;
-  let workersCount = 0;
   let currentIndex = 0;
 
-  // Create workers to process files in parallel
-  const createWorkers = () => {
-    const promises = [];
-    hashes = [];
-    while (workersCount < maxWorkers && currentIndex < files.length) {
-      workersCount++;
-      currentIndex++;
-      const file = files[currentIndex];
+  const createWorker = (file) => {
+    const webWorker = new WebWorker(hashFileWorker);
+    webWorker.postMessage(file);
+    return webWorker;
+  };
+
+  const processFile = async (file) => {
+    return new Promise((resolve) => {
       const worker = createWorker(file);
-      promises.push(
-        new Promise((resolve) => {
-          worker.onmessage = function (e) {
-            hashes.push(e.data);
-            workersCount--;
-            resolve();
-          };
-        })
-      );
-    }
-    console.log(
-      "entered createWorkers currentIndex , workersCount , promises ",
-      currentIndex,
-      workersCount,
-      promises
-    );
-    return promises;
+      worker.onmessage = function (e) {
+        globalHashes.push(e.data);
+        resolve();
+      };
+    });
   };
 
-  // Start processing files
-
-  const getAllHashes = async () => {
-    console.log("entered getAllHashes function");
-    if (currentIndex <= files.length) {
-      const promises = createWorkers();
-      console.log("ENTERED IF CONDITION WITH PROMISES ", promises);
-      await Promise.all(promises);
-      globalHashes = [...globalHashes, ...hashes];
-      console.log("HASH ARRAY: ", globalHashes);
-      getAllHashes();
+  const processNext = async () => {
+    const workers = [];
+    while (currentIndex < files.length && workers.length < maxWorkers) {
+      workers.push(processFile(files[currentIndex]));
+      currentIndex++;
     }
-    return globalHashes;
+    await Promise.all(workers);
   };
-  const res = await getAllHashes();
-  console.log("returning before getting response : ", res);
-  return res;
+
+  const processAllFiles = async () => {
+    while (currentIndex < files.length) {
+      await processNext();
+    }
+  };
+
+  await processAllFiles();
+  return globalHashes;
 };
 
 const generateAssetMetaData = async (allowedFileTypes, directoryHandle) => {
@@ -80,8 +59,6 @@ const generateAssetMetaData = async (allowedFileTypes, directoryHandle) => {
     }
 
     const filesHashes = await createFilesHash(files);
-
-    console.log({ filesHashes }, "<---- ");
 
     let videoIdx = 0;
     let audioIdx = 0;
